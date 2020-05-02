@@ -18,10 +18,11 @@ The wrapper `.cpp` contains a class `ZMQSocket` with:
 Can be successfully compiled. But the client would fail to start running.
 ```
 # g++ -g wrapperWithClass/socketWrapper.cpp client.cpp -o client -std=c++11 -lzmq /usr/local/lib/libzmqpp.a
-# ./client
+# ./client 
 Connecting to hello world server…
-libc++abi.dylib: terminating with uncaught exception of type zmqpp::zmq_internal_exception: Operation not supported by device
-Abort trap: 6
+terminate called after throwing an instance of 'zmqpp::zmq_internal_exception'
+  what():  No such device
+Aborted
 ```
 I think the problem is caused by the `zmqpp::socket` we stored in the class. 
 
@@ -44,7 +45,7 @@ ZMQSocket::ZMQSocket(int type) : my_socket(my_context, socket_type::reply) {
 	} else {
 		my_type = socket_type::reply;
 	}
-    socket socket(my_context, my_type);
+    my_socket=socket(my_context, my_type);
 }
 ```
 After such modification, the server can start running properly, but the client will abort as above.
