@@ -1,7 +1,7 @@
 Error Tracker
 ======================================
 ## Description ##
-This is an implementation of ZMQ messager in Golang with `cgo` and `zmqpp` C++ library.
+This is an implementation of ZMQ messager in **Golang** with `cgo` and `zmqpp` C++ library.
 
 To export the C++ functions as C functions, I add a wrapper class with `extern C` to the project. The Go functions call `C.function` to use the `zmqpp` library.
 
