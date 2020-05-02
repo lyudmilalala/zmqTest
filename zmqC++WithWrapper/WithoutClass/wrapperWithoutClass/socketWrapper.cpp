@@ -8,7 +8,7 @@ void initSocket(int type) {
 	} else {
 		my_type = socket_type::reply;
 	}
-    my_socket(my_context, my_type);
+    my_socket = socket(my_context, my_type);
 }
 
 void bind(string endpoint) {
@@ -21,7 +21,7 @@ void send(string s) {
 	my_socket.send(message);
 }
 
-string receiveMsg () {
+string receive () {
 	message message;
 	my_socket.receive(message);
 	string s;

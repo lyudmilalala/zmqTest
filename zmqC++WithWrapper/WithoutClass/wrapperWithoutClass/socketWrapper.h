@@ -12,11 +12,12 @@ using namespace zmqpp;
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
+
 extern socket my_socket;
 void initSocket(int type);
 void bind(string endpoint);
 void send(string s);
-string receiveMsg();
+string receive();
 
 // #ifdef __cplusplus
 // }

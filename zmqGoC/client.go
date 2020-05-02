@@ -3,8 +3,10 @@ package main
 /*
 #cgo CXXFLAGS: -std=c++11
 #cgo  CFLAGS: -I  /usr/local/include/
-#cgo  CFLAGS: -I  /usr/local/include/c++/9.3.0/
-#cgo  CFLAGS: -I  /usr/local/include/c++/9.3.0/x86_64-apple-darwin18/
+#cgo  CFLAGS: -I /usr/include/c++/8/
+#cgo  CFLAGS: -I /usr/include/c++/8/x86_64-redhat-linux/
+#cgo  CFLAGS: -I /usr/include/
+#cgo  LDFLAGS: -L /usr/lib64/
 #cgo  LDFLAGS: -L /usr/local/lib/ -lzmq -lstdc++
 #include <zmq.h>
 #include <string.h>

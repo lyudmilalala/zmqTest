@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 using namespace std;
@@ -20,7 +21,7 @@ int main(int argc, char *argv[]) {
     // send a message
     cout << "Sending Hello " << request_nbr << "..." << endl;
     send("Hello"); 
-    string msg=receiveMsg();
+    string msg=receive();
     cout << "Received " << msg << " " << request_nbr << endl;
   }
 }

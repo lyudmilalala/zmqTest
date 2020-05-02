@@ -3,6 +3,7 @@
 #include "wrapperWithoutClass/socketWrapper.h"
 #include <string>
 #include <iostream>
+#include <stdio.h>
 #include <chrono>
 #include <thread>
 // 
@@ -16,7 +17,7 @@ int main(int argc, char *argv[]) {
   
   while (1) {
     // receive the message
-    std::string msg=receiveMsg();
+    std::string msg=receive();
     //Do some 'work'
     this_thread::sleep_for(chrono::seconds(1));
     cout << "Received" << msg << endl;
