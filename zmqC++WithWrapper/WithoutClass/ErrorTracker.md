@@ -14,26 +14,126 @@ The wrapper `.cpp` contains:
 
 ## Compile and Running Status ##
 Error for compiling: 
+```
+# g++ -g /usr/local/lib/libzmqpp.a -lzmq wrapperWithoutClass/socketWrapper.cpp client.cpp -o client -std=c++11
+wrapperWithoutClass/socketWrapper.cpp: In function ‘void initSocket(int)’:
+wrapperWithoutClass/socketWrapper.cpp:11:34: error: no match for call to ‘(zmqpp::socket) (zmqpp::context&, zmqpp::socket_type&)’
+     my_socket(my_context, my_type);
+                                  ^
+```
+```
+In file included from /usr/local/include/zmqpp/message.hpp:21,
+                 from /usr/local/include/zmqpp/zmqpp.hpp:64,
+                 from wrapperWithoutClass/socketWrapper.h:4,
+                 from client.cpp:3:
+/usr/include/c++/8/functional: In substitution of ‘template<class _Functor, class ... _Bound_args> template<class _Fn, class _CallArgs, class ... _BArgs> using _Res_type_impl = typename std::result_of<_Fn&(std::_Bind<_Functor(_Bound_args ...)>::_Mu_type<_BArgs, _CallArgs>&& ...)>::type [with _Fn = const char*; _CallArgs = _CallArgs; _BArgs = {}; _Functor = const char*; _Bound_args = {}]’:
+/usr/include/c++/8/functional:447:71:   required from ‘struct std::_Bind<const char*()>’
+client.cpp:17:30:   required from here
+/usr/include/c++/8/functional:444:72: error: no type named ‘type’ in ‘class std::result_of<const char*&()>’
+    = typename result_of< _Fn&(_Mu_type<_BArgs, _CallArgs>&&...) >::type;
+                                                                        ^
+/usr/include/c++/8/functional: In substitution of ‘template<class _Functor, class ... _Bound_args> template<class _Fn, class _CallArgs, class ... _BArgs> using _Res_type_impl = typename std::result_of<_Fn&(std::_Bind<_Functor(_Bound_args ...)>::_Mu_type<_BArgs, _CallArgs>&& ...)>::type [with _Fn = const char*; _CallArgs = std::tuple<_Tps ...>; _BArgs = {}; _Functor = const char*; _Bound_args = {}]’:
+/usr/include/c++/8/functional:447:71:   required by substitution of ‘template<class _Functor, class ... _Bound_args> template<class _CallArgs> using _Res_type = std::_Bind<_Functor(_Bound_args ...)>::_Res_type_impl<_Functor, _CallArgs, _Bound_args ...> [with _CallArgs = std::tuple<_Tps ...>; _Functor = const char*; _Bound_args = {}]’
+/usr/include/c++/8/functional:480:2:   required from ‘struct std::_Bind<const char*()>’
+client.cpp:17:30:   required from here
+/usr/include/c++/8/functional:444:72: error: no type named ‘type’ in ‘class std::result_of<const char*&()>’
+```
 
-At begining, there is a `duplicate symbol` error because `socketWrapper.h` is both include in `socketWrapper.cpp` and `client.cpp`.
+They happens in the function used to initialize the socket.
+
 ```
-# g++ -g wrapperWithoutClass/socketWrapper.cpp client.cpp -o client -std=c++11 -lzmq /usr/local/lib/libzmqpp.a
-duplicate symbol _my_socket in:
-    /var/folders/j1/chwrsttd6_339kqmgv3h90qw0000gn/T/socketWrapper-fe4015.o
-    /var/folders/j1/chwrsttd6_339kqmgv3h90qw0000gn/T/client-d3676f.o
-ld: 1 duplicate symbol for architecture x86_64
-```
-To avoid this error, I add `extern` before the declaration of `my_socket`
-After this, the error becomes:
-```
-# g++ -g wrapperWithoutClass/socketWrapper.cpp client.cpp -o client -std=c++11 -lzmq /usr/local/lib/libzmqpp.a
-wrapperWithoutClass/socketWrapper.cpp:11:5: error: type 'zmqpp::socket' does not provide
-      a call operator
+void initSocket(int type) {
+	context my_context;
+    socket_type my_type;
+    if (type == 0) {
+		my_type = socket_type::req;
+	} else {
+		my_type = socket_type::reply;
+	}
     my_socket(my_context, my_type);
-    ^~~~~~~~~
-1 error generated.
+}
 ```
-I have read a lot about the error `does not provide a call operator`, but still could not understand how it works, especially the subject of the error is some third-party library that I could not modify.
+
+For the first error, I am confusing why `my_context` and `my_type` becomes addresses. I tried to point to its value in my code.
+
+```
+void initSocket(int type) {
+    context my_context;
+    socket_type my_type;
+    if (type == 0) {
+                my_type = socket_type::req;
+        } else {
+                my_type = socket_type::reply;
+        }
+    my_socket(*my_context, *my_type);
+}
+
+```
+
+And it gave errors as:
+
+```
+# g++ -g /usr/local/lib/libzmqpp.a -lzmq wrapperWithoutClass/socketWrapper.cpp client.cpp -o client -std=c++11
+wrapperWithoutClass/socketWrapper.cpp: In function ‘void initSocket(int)’:
+wrapperWithoutClass/socketWrapper.cpp:11:15: error: no match for ‘operator*’ (operand type is ‘zmqpp::context’)
+     my_socket(*my_context, *my_type);
+               ^~~~~~~~~~~
+wrapperWithoutClass/socketWrapper.cpp:11:28: error: no match for ‘operator*’ (operand type is ‘zmqpp::socket_type’)
+     my_socket(*my_context, *my_type);
+                            ^~~~~~~~
+
+```
+
+I then tried to modify the way of defining the variable (though I think they are not correct).
+
+```
+void initSocket(int type) {
+	context my_context;
+    socket_type my_type;
+    if (type == 0) {
+		my_type = socket_type::req;
+	} else {
+		my_type = socket_type::reply;
+	}
+    my_socket = socket(my_context, my_type);
+}
+```
+
+or
+
+```
+void initSocket(int type) {
+    context my_context;
+    socket_type my_type;
+    if (type == 0) {
+                my_type = socket_type::req;
+        } else {
+                my_type = socket_type::reply;
+        }
+    socket my_socket(my_context, my_type);
+}
+```
+
+But the other error besides the pointers always exists:
+
+```
+# g++ -g /usr/local/lib/libzmqpp.a -lzmq wrapperWithoutClass/socketWrapper.cpp client.cpp -o client -std=c++11
+In file included from /usr/local/include/zmqpp/message.hpp:21,
+                 from /usr/local/include/zmqpp/zmqpp.hpp:64,
+                 from wrapperWithoutClass/socketWrapper.h:4,
+                 from client.cpp:3:
+/usr/include/c++/8/functional: In substitution of ‘template<class _Functor, class ... _Bound_args> template<class _Fn, class _CallArgs, class ... _BArgs> using _Res_type_impl = typename std::result_of<_Fn&(std::_Bind<_Functor(_Bound_args ...)>::_Mu_type<_BArgs, _CallArgs>&& ...)>::type [with _Fn = const char*; _CallArgs = _CallArgs; _BArgs = {}; _Functor = const char*; _Bound_args = {}]’:
+/usr/include/c++/8/functional:447:71:   required from ‘struct std::_Bind<const char*()>’
+client.cpp:17:30:   required from here
+/usr/include/c++/8/functional:444:72: error: no type named ‘type’ in ‘class std::result_of<const char*&()>’
+    = typename result_of< _Fn&(_Mu_type<_BArgs, _CallArgs>&&...) >::type;
+                                                                        ^
+/usr/include/c++/8/functional: In substitution of ‘template<class _Functor, class ... _Bound_args> template<class _Fn, class _CallArgs, class ... _BArgs> using _Res_type_impl = typename std::result_of<_Fn&(std::_Bind<_Functor(_Bound_args ...)>::_Mu_type<_BArgs, _CallArgs>&& ...)>::type [with _Fn = const char*; _CallArgs = std::tuple<_Tps ...>; _BArgs = {}; _Functor = const char*; _Bound_args = {}]’:
+/usr/include/c++/8/functional:447:71:   required by substitution of ‘template<class _Functor, class ... _Bound_args> template<class _CallArgs> using _Res_type = std::_Bind<_Functor(_Bound_args ...)>::_Res_type_impl<_Functor, _CallArgs, _Bound_args ...> [with _CallArgs = std::tuple<_Tps ...>; _Functor = const char*; _Bound_args = {}]’
+/usr/include/c++/8/functional:480:2:   required from ‘struct std::_Bind<const char*()>’
+client.cpp:17:30:   required from here
+/usr/include/c++/8/functional:444:72: error: no type named ‘type’ in ‘class std::result_of<const char*&()>’
+```
 
 **Have not figured out how to fix yet.**
 
