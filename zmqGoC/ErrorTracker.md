@@ -1,7 +1,7 @@
 Error Tracker
 ======================================
 ## Description ##
-This is an implementation of ZMQ messager in Go with `cgo` and `libzmq` C library.
+This is an implementation of ZMQ messager in **Golang** with `cgo` and `libzmq` C library.
 
 ## Compile and Running Status ##
 Compiled successfully.
